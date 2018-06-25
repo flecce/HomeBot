@@ -1,4 +1,4 @@
-> ##TelegramBot
+> ##HomeBot
 
 > Test project for my home automation.
 > This project required a MQtt broker (line mosquitto).
