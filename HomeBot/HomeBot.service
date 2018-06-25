@@ -1,0 +1,10 @@
+﻿[Unit]
+Description=Home bot
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/dotnet /opt/homebot/TelegramBot.dll 5000
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
