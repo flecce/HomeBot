@@ -1,7 +1,7 @@
 > ##HomeBot
 
 > Test project for my home automation.
-> This project required a MQtt broker (line mosquitto).
+> This project required a MQtt broker (like Mosquitto - https://mosquitto.org).
 > Add app settings to project and compile follow key:
 > Telegram:BotKey			- Telegram api key
 > MQTT:Broker:Address		- MQtt broker address
