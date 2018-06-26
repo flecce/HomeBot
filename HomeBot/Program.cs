@@ -2,7 +2,12 @@
 using CommonHelpers.Bots;
 using CommonHelpers.Gardens;
 using CommonHelpers.Gardens.Water;
+using CommonHelpers.Inverters.Interfaces;
+using CommonHelpers.Inverters.Persisters;
+using CommonHelpers.Inverters.Plugins.Fimer;
 using CommonHelpers.MQTTs;
+using CommonHelpers.Tasks;
+using CommonHelpers.Times;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
@@ -14,9 +19,11 @@ namespace TelegramBot
         public static void Main(string[] args)
         {
             ServiceCollection serviceCollection = new ServiceCollection();
-            ServiceProvider iocContainer = _configureServices(serviceCollection);
-
-            var botService = iocContainer.GetService<IBotService>();
+            ServiceFactory.CurrentServiceProvider = _configureServices(serviceCollection);
+            ITask task = new InverterTask();
+            task.Init();
+            task.Run();
+            var botService = ServiceFactory.CurrentServiceProvider.GetService<IBotService>();
 
             botService.Start();            
             Console.ReadLine();
@@ -25,10 +32,12 @@ namespace TelegramBot
 
         private static ServiceProvider _configureServices(ServiceCollection serviceCollection)
         {
+            serviceCollection.AddSingleton<ITimeService, RealTimeService>();
+            serviceCollection.AddSingleton<IPersisterFactory, PersisterFactory>();
             serviceCollection.AddSingleton<ILoggerFactory, LoggerFactory>();
             serviceCollection.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
             serviceCollection.AddLogging((builder) => builder.SetMinimumLevel(LogLevel.Debug));
-
+            
             serviceCollection.AddTransient<IConfigurationService, AppSettingsXMLConfigurationService>();
             serviceCollection.AddTransient<IGardenWaterControllerService, ArduinoGardenWaterControllerService>(factory =>
             {
