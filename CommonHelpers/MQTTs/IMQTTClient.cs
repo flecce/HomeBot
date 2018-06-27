@@ -10,5 +10,6 @@ namespace CommonHelpers.MQTTs
         void RemoveSubscriber(string queueName, Action<MqttMsgPublishEventArgs> messageCallBack);
 
         void Publish(string queueName, byte[] data);
+        void Publish(string queueName, string data);
     }
 }

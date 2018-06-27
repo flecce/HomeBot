@@ -1,6 +1,8 @@
 ﻿using CommonHelpers.Inverters.Enums;
 using CommonHelpers.Inverters.Interfaces;
 using CommonHelpers.Times;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,9 +17,11 @@ namespace CommonHelpers.Inverters.Persisters
         //private bool _alreadyReadySummary = false;
         private CurrentInformation _localData = new CurrentInformation();
 
-        internal PVOutputPersister_addbatchstatus(ITimeService timeService)
+        private readonly ILogger<PVOutputPersister_addbatchstatus> _logger;
+        internal PVOutputPersister_addbatchstatus(ITimeService timeService, ILogger<PVOutputPersister_addbatchstatus> logger)
         {
             _timeService = timeService;
+            _logger = logger;
         }
 
         public override bool Save(IInverter inv, ConverterStatus value)
@@ -37,7 +41,7 @@ namespace CommonHelpers.Inverters.Persisters
             {
                 lock (this)
                 {
-                    //LogFactory.GetLog().WriteToLog(TraceEventType.Verbose, "Comunicate to pvoutput for addbatchstatus");
+                    _logger.LogDebug("Comunicate to pvoutput for addbatchstatus");
 
                     string key = "key=024fe8dd52991266562af15510ab1a999c927805&sid=9627";
                     List<string> sb = new List<string>();
@@ -59,7 +63,7 @@ namespace CommonHelpers.Inverters.Persisters
                     string statusParameters = "data=" + String.Join(";", sb.ToArray());
                     string statusURI = "http://pvoutput.org/service/r2/addbatchstatus.jsp?";
                     string statusUrl = statusURI + key + "&" + statusParameters;
-                   // LogFactory.GetLog().WriteToLog(TraceEventType.Verbose, "status url:" + statusUrl);
+                    _logger.LogDebug("status url:" + statusUrl);
                     string responseValue = "";
                     bool response = _doGETRequest(statusUrl, ref responseValue);
 
@@ -72,7 +76,7 @@ namespace CommonHelpers.Inverters.Persisters
 
         protected override bool _checkResponse(string resp)
         {
-           // LogFactory.GetLog().WriteToLog(TraceEventType.Verbose, "  risposta:" + resp);
+            _logger.LogDebug("  risposta:" + resp);
             return true;
         }
     }

@@ -2,11 +2,11 @@
 using CommonHelpers.Bots;
 using CommonHelpers.Gardens;
 using CommonHelpers.Gardens.Water;
-using CommonHelpers.Inverters.Interfaces;
 using CommonHelpers.Inverters.Persisters;
-using CommonHelpers.Inverters.Plugins.Fimer;
+using CommonHelpers.Logs.MQTTProvider;
 using CommonHelpers.MQTTs;
-using CommonHelpers.Tasks;
+using CommonHelpers.Schedulers;
+using CommonHelpers.Schedulers.Tasks;
 using CommonHelpers.Times;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -20,24 +20,27 @@ namespace TelegramBot
         {
             ServiceCollection serviceCollection = new ServiceCollection();
             ServiceFactory.CurrentServiceProvider = _configureServices(serviceCollection);
-            ITask task = new InverterTask();
-            task.Init();
-            task.Run();
+           
             var botService = ServiceFactory.CurrentServiceProvider.GetService<IBotService>();
+            var schedulerFactory = ServiceFactory.CurrentServiceProvider.GetService<ISchedulerFactory>();
+            schedulerFactory.AddTask("", () => new InverterTask());
 
-            botService.Start();            
+            schedulerFactory.Start();
+            botService.Start();
             Console.ReadLine();
             botService.Stop();
+            schedulerFactory.Stop();
         }
 
         private static ServiceProvider _configureServices(ServiceCollection serviceCollection)
         {
+            serviceCollection.AddSingleton<ISchedulerFactory, CronSchedulerFactory>();
             serviceCollection.AddSingleton<ITimeService, RealTimeService>();
             serviceCollection.AddSingleton<IPersisterFactory, PersisterFactory>();
             serviceCollection.AddSingleton<ILoggerFactory, LoggerFactory>();
             serviceCollection.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
             serviceCollection.AddLogging((builder) => builder.SetMinimumLevel(LogLevel.Debug));
-            
+
             serviceCollection.AddTransient<IConfigurationService, AppSettingsXMLConfigurationService>();
             serviceCollection.AddTransient<IGardenWaterControllerService, ArduinoGardenWaterControllerService>(factory =>
             {
@@ -68,7 +71,13 @@ namespace TelegramBot
             ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
 
             serviceProvider.GetRequiredService<ILoggerFactory>()
-                            .AddConsole(LogLevel.Debug);
+                            .AddConsole(LogLevel.Debug)
+                            .AddMQTTLogger(new MQTTLoggerConfiguration
+                            {
+                                BrokerServer = serviceProvider.GetService<IConfigurationService>().GetRequiredConfigValue("MQTT:Broker:Address"),
+                                LogLevel = LogLevel.Debug
+                            },
+                            serviceProvider.GetService<IMQTTQueueService>());
             return serviceProvider;
         }
     }

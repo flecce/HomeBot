@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace CommonHelpers.Tasks
+namespace CommonHelpers.Schedulers.Tasks
 {
     public interface ITask
     {

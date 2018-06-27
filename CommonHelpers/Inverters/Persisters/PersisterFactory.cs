@@ -2,6 +2,8 @@
 using CommonHelpers.Inverters.Intefaces;
 using CommonHelpers.Inverters.Interfaces;
 using CommonHelpers.Times;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 
 namespace CommonHelpers.Inverters.Persisters
@@ -10,15 +12,15 @@ namespace CommonHelpers.Inverters.Persisters
     {
         private static List<IPersister> _persisterList = new List<IPersister>();
 
-        public PersisterFactory(IConfigurationService configService, ITimeService timeService)
+        public PersisterFactory(IConfigurationService configService, ITimeService timeService, ILogger<PersisterFactory> logger)
         {
             //_persisterList.Add(new FilePersister(configService, timeService));
             //_persisterList.Add(new PVOutputPersister_addstatus());
-            _persisterList.Add(new PVOutputPersister_addbatchstatus(timeService));
+            _persisterList.Add(new PVOutputPersister_addbatchstatus(timeService, ServiceFactory.CurrentServiceProvider.GetService<ILogger<PVOutputPersister_addbatchstatus>>()));
             //_persisterList.Add(new EmonCMSPersister(timeService));
         }
 
-        public  void Save(IInverter inv, ConverterStatus? value)
+        public void Save(IInverter inv, ConverterStatus? value)
         {
             if (value.HasValue)
             {

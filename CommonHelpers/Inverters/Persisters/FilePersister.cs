@@ -1,6 +1,7 @@
 ﻿using CommonHelpers.Inverters.Intefaces;
 using CommonHelpers.Inverters.Interfaces;
 using CommonHelpers.Times;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -16,16 +17,18 @@ namespace CommonHelpers.Inverters.Persisters
         private double _sendIntervalSeconds = 10;
         private readonly IConfigurationService _configService;
         private readonly ITimeService _timeService;
-        public FilePersister(IConfigurationService configService, ITimeService timeService)
+        private readonly ILogger<FilePersister> _logger;
+        public FilePersister(IConfigurationService configService, ITimeService timeService, ILogger<FilePersister> logger)
         {
             _configService = configService;
             _timeService = timeService;
+            _logger = logger;
         }
         public bool Save(IInverter inv, Enums.ConverterStatus value)
         {
             if (_timeService.GetCurrentDateTime().Subtract(_lastSend).TotalSeconds > _sendIntervalSeconds)
             {
-                //LogFactory.GetLog().WriteToLog(TraceEventType.Verbose, "Save data to file");
+                _logger.LogDebug("Save data to file");
 
                 lock (_syncObject)
                 {
@@ -51,7 +54,7 @@ namespace CommonHelpers.Inverters.Persisters
                         sw.WriteLine(data);
                     }
 
-                  //  LogFactory.GetLog().WriteToLog(TraceEventType.Information, "Istantanea:{0} kWh, Prod giornaliera:{1} kWh", value.TypeStatus.GetProperty(Enums.CommonPropertyType.ProduzioneCorrente), value.CommonStatus.EnergieTag);
+                   _logger.LogDebug("Istantanea:{0} kWh, Prod giornaliera:{1} kWh", value.TypeStatus.GetProperty(Enums.CommonPropertyType.ProduzioneCorrente), value.CommonStatus.EnergieTag);
                 }
                 _lastSend = _timeService.GetCurrentDateTime();
             }

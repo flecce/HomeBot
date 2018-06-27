@@ -3,6 +3,7 @@ using M2Mqtt.Messages;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -90,6 +91,10 @@ namespace CommonHelpers.MQTTs
         public void Publish(string queueName, byte[] data)
         {
             _MQTTclient.Publish(queueName, data);
+        }
+        public void Publish(string queueName, string data)
+        {
+            _MQTTclient.Publish(queueName, ASCIIEncoding.ASCII.GetBytes(data));
         }
     }
 }
