@@ -8,6 +8,14 @@ namespace CommonHelpers
     {
         public static class Garden
         {
+            public static class Messages
+            {
+                public const string ON = "ON";
+                public const string OFF = "OFF";
+                public const string ONRequired = "ON-REQUIRED";
+                public const string OFFRequired = "OFF-REQUIRED";
+            }
+
             public static class Queues
             {
                 public const string Water = "/home/garden/water";
@@ -17,6 +25,12 @@ namespace CommonHelpers
 
         public static class Power
         {
+            public static class Messages
+            {
+                public const string ProductionDataAcquired = "POWER_DATA_ACQUIRED";
+                public const string ProductionDataRequest = "POWER_DATA_REQUEST";
+            }
+
             public static class Queues
             {
                 public const string Production = "/home/power/production";

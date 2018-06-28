@@ -38,41 +38,41 @@ namespace CommonHelpers.Gardens
         {
             string textCommand = ASCIIEncoding.ASCII.GetString(evt.Message);
 
-            if (textCommand == "ON")
+            if (textCommand == Constants.Garden.Messages.ON)
             {
                 _onStartHandlerList.ForEach(action => action());
             }
 
-            if (textCommand == "OFF")
+            if (textCommand == Constants.Garden.Messages.OFF)
             {
                 _onStopHandlerList.ForEach(action => action());
             }
 
-            if (textCommand == "OFF-REQUIRED")
+            if (textCommand == Constants.Garden.Messages.OFFRequired)
             {
                 // Chiamata a arduino per chiusura
                 _waterController.Close();
-                _mqttService.Publish(Constants.Garden.Queues.Water, ASCIIEncoding.ASCII.GetBytes("OFF"));
+                _mqttService.Publish(Constants.Garden.Queues.Water, Constants.Garden.Messages.OFF);
             }
 
-            if (textCommand == "ON-REQUIRED")
+            if (textCommand == Constants.Garden.Messages.ONRequired)
             {
                 // Chiamata a arduino per apertura
                 _waterController.Open();
-                _mqttService.Publish(Constants.Garden.Queues.Water, ASCIIEncoding.ASCII.GetBytes("ON"));
+                _mqttService.Publish(Constants.Garden.Queues.Water, Constants.Garden.Messages.ON);
             }
-
+        
             _logger.LogDebug($"Recv:{ASCIIEncoding.ASCII.GetString(evt.Message)}");
         }
 
         public void ForceStop()
         {
-            _mqttService.Publish(Constants.Garden.Queues.Water, ASCIIEncoding.ASCII.GetBytes("OFF-REQUIRED"));
+            _mqttService.Publish(Constants.Garden.Queues.Water, Constants.Garden.Messages.OFFRequired);
         }
 
         public void ForceStart()
         {
-            _mqttService.Publish(Constants.Garden.Queues.Water, ASCIIEncoding.ASCII.GetBytes("ON-REQUIRED"));
+            _mqttService.Publish(Constants.Garden.Queues.Water, Constants.Garden.Messages.ONRequired);
         }
     }
 }

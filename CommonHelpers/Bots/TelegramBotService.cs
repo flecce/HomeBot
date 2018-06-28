@@ -1,4 +1,5 @@
 ﻿using CommonHelpers.Gardens;
+using CommonHelpers.Powers;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -17,12 +18,20 @@ namespace CommonHelpers.Bots
         private readonly TelegramBotClient _currentBot = null;
         private readonly ILogger<TelegramBotService> _logger;
         private readonly IGardenService _gardenService;
-
+        private readonly IPowerService _powerService;
         private CancellationTokenSource _onStartCancelationToken;
 
-        public TelegramBotService(string botKey, IGardenService gardenService, ILogger<TelegramBotService> logger)
+        private PowerDataInfo _lastProductionValue = new PowerDataInfo
+        {
+            DailyProductionValue = 0.0,
+            ConsumationValue = 0.0,
+            DateRef = DateTime.MinValue
+        };
+
+        public TelegramBotService(string botKey, IGardenService gardenService, ILogger<TelegramBotService> logger, IPowerService powerService)
         {
             _logger = logger;
+            _powerService = powerService;
             _currentBot = new TelegramBotClient(botKey);
 
             _currentBot.OnMessage += BotOnMessageReceived;
@@ -31,8 +40,20 @@ namespace CommonHelpers.Bots
             _gardenService.SubscribeOnStart(_gardenOnStartHandler);
             _gardenService.SubscribeOnStop(_gardenOnStopHandler);
 
+            _powerService.SubscribeOnValueAcquired(_powerValueAcquiredHandler);
+
             User currentBotInfo = _currentBot.GetMeAsync().GetAwaiter().GetResult();
             _logger.LogDebug($"Connected as: {currentBotInfo.Username}");
+        }
+
+        private void _powerValueAcquiredHandler(PowerDataBase data)
+        {
+            if (data.GetType() == typeof(ProductionDataInfo))
+            {
+                _lastProductionValue.DailyProductionValue = ((ProductionDataInfo)data).DailyValue;
+
+                _lastProductionValue.CurrentProductionValue = ((ProductionDataInfo)data).CurrentValue;
+            }
         }
 
         public void Start()
@@ -52,10 +73,9 @@ namespace CommonHelpers.Bots
             var message = messageEventArgs.Message;
             _logger.LogDebug($"Data recv: {message.Text}");
             if (message == null || message.Type != MessageType.Text) return;
-            
+
             switch (message.Text.Split(' ').First())
             {
-                // send inline keyboard
                 case "/gardenoff":
                     _gardenService.ForceStop();
                     await _currentBot.SendTextMessageAsync(
@@ -63,7 +83,6 @@ namespace CommonHelpers.Bots
                         "Chiuso");
                     break;
 
-                // send custom keyboard
                 case "/gardenon":
                     _gardenService.ForceStart();
                     await _currentBot.SendTextMessageAsync(
@@ -71,11 +90,19 @@ namespace CommonHelpers.Bots
                         "Attivo");
                     break;
 
+                case "/power":
+                    string value = $"Prod gg:{_lastProductionValue.DailyProductionValue} - Prod cur:{_lastProductionValue.CurrentProductionValue} - Consumo corrente:{_lastProductionValue.ConsumationValue}";
+                    await _currentBot.SendTextMessageAsync(
+                        message.Chat.Id,
+                        value);
+                    break;
+
                 default:
                     const string usage = @"
 Usage:
 /gardenoff   - Apre
-/gardenon - Chiude";
+/gardenon - Chiude
+/power - Dati di consumo/generazione";
 
                     await _currentBot.SendTextMessageAsync(
                         message.Chat.Id,
@@ -120,6 +147,15 @@ Usage:
                          195243681,
                          "Acqua ferma");
             _onStartCancelationToken = null;
+        }
+
+        private class PowerDataInfo
+        {
+            public Double DailyProductionValue { get; set; }
+
+            public Double CurrentProductionValue { get; set; }
+            public Double ConsumationValue { get; set; }
+            public DateTime DateRef { get; set; }
         }
     }
 }

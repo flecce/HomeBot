@@ -38,7 +38,7 @@ namespace CommonHelpers.Inverters.Persisters
             _localData.Temps.Add(temp1);
             _lastAdd = _timeService.GetCurrentDateTime();
             _logger.LogDebug($"Data added: Count={_localData.CurrentPowers.Count}");
-            if (_localData.CurrentPowers.Count >= 2)
+            if (_localData.CurrentPowers.Count >= 30)
             {
                 lock (this)
                 {
