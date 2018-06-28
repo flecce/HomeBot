@@ -36,7 +36,7 @@ namespace CommonHelpers.MQTTs
                         _MQTTclient = new MqttClient(_mqttBroker);
                         _MQTTclient.MqttMsgPublishReceived += client_MqttMsgPublishReceived;
                         _MQTTclient.ConnectionClosed += _MQTTclient_ConnectionClosed;
-                        _MQTTclient.Connect("TelegramBot" + DateTime.Now.Ticks.ToString());
+                        _MQTTclient.Connect("HomeBot" + DateTime.Now.Ticks.ToString());
                         _logger.LogDebug("Connected");
                     }
                     catch

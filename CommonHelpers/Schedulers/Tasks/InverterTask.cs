@@ -4,7 +4,6 @@ using CommonHelpers.Inverters.Persisters;
 using CommonHelpers.Inverters.Plugins.Fimer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -20,8 +19,8 @@ namespace CommonHelpers.Schedulers.Tasks
         public void Run()
         {
             ILogger<InverterTask> logger = ServiceFactory.CurrentServiceProvider.GetService<ILogger<InverterTask>>();
-
-            IInverter currentInverter = new FimerR25Inverter();
+            ILogger<FimerR25Inverter> loggerFimer = ServiceFactory.CurrentServiceProvider.GetService<ILogger<FimerR25Inverter>>();
+            IInverter currentInverter = new FimerR25Inverter(loggerFimer);
             Hashtable ht = new Hashtable
                 {
                     { InverterCommonProperties.NET_IP_ADDRESS, "192.168.0.99" },
@@ -29,18 +28,18 @@ namespace CommonHelpers.Schedulers.Tasks
                     { InverterCommonProperties.SERIAL_NUMBER, "18344" }
                 };
 
-            logger.LogDebug(String.Format("Connect to: {0}", ht[InverterCommonProperties.NET_IP_ADDRESS]));
-            logger.LogDebug(String.Format("Port: {0}", ht[InverterCommonProperties.NET_IP_PORT]));
-            logger.LogDebug(String.Format("Serial : {0}", ht[InverterCommonProperties.SERIAL_NUMBER]));
+            logger.LogDebug($"Connect to: {ht[InverterCommonProperties.NET_IP_ADDRESS]} - Port: {ht[InverterCommonProperties.NET_IP_PORT]} - Serial : {ht[InverterCommonProperties.SERIAL_NUMBER]}");
 
             Ping p = new Ping();
 
             PingReply pr = p.Send(IPAddress.Parse((string)ht[InverterCommonProperties.NET_IP_ADDRESS]), 5000);
             if (pr.Status == IPStatus.Success)
             {
+                logger.LogDebug("initing...");
                 currentInverter.Init(ht);
+                logger.LogDebug("connecting...");
                 TransmissionState ts = currentInverter.Connect();
-
+                logger.LogDebug("connected");
                 if (ts == TransmissionState.Ok)
                 {
                     logger.LogDebug("start reading...");
@@ -54,6 +53,10 @@ namespace CommonHelpers.Schedulers.Tasks
                         currentInverter.Dispose();
                     }
                     ServiceFactory.CurrentServiceProvider.GetService<IPersisterFactory>().Save(currentInverter, cs);
+                }
+                else
+                {
+                    logger.LogDebug($"reading error:{ts}");
                 }
             }
         }

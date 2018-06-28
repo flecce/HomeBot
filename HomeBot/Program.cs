@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 
-namespace TelegramBot
+namespace Homebot
 {
     internal class Program
     {
@@ -27,9 +27,7 @@ namespace TelegramBot
 
             schedulerFactory.Start();
             botService.Start();
-            Console.ReadLine();
-            botService.Stop();
-            schedulerFactory.Stop();
+            
         }
 
         private static ServiceProvider _configureServices(ServiceCollection serviceCollection)

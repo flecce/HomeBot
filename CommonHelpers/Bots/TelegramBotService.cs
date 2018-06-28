@@ -32,17 +32,19 @@ namespace CommonHelpers.Bots
             _gardenService.SubscribeOnStop(_gardenOnStopHandler);
 
             User currentBotInfo = _currentBot.GetMeAsync().GetAwaiter().GetResult();
-            logger.LogDebug($"Connected as: {currentBotInfo.Username}");
+            _logger.LogDebug($"Connected as: {currentBotInfo.Username}");
         }
 
         public void Start()
         {
             _currentBot.StartReceiving(Array.Empty<UpdateType>());
+            _logger.LogDebug($"Start recv messages");
         }
 
         public void Stop()
         {
             _currentBot.StopReceiving();
+            _logger.LogDebug($"Stop Telegram");
         }
 
         private async void BotOnMessageReceived(object sender, MessageEventArgs messageEventArgs)

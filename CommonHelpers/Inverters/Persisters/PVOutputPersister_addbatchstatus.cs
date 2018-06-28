@@ -22,6 +22,7 @@ namespace CommonHelpers.Inverters.Persisters
         {
             _timeService = timeService;
             _logger = logger;
+            _logger.LogDebug($"PVOutputPersister_addbatchstatus ctor");
         }
 
         public override bool Save(IInverter inv, ConverterStatus value)
@@ -36,8 +37,8 @@ namespace CommonHelpers.Inverters.Persisters
             _localData.Taketimes.Add(_timeService.GetCurrentDateTime());
             _localData.Temps.Add(temp1);
             _lastAdd = _timeService.GetCurrentDateTime();
-
-            if (_localData.CurrentPowers.Count >= 30)
+            _logger.LogDebug($"Data added: Count={_localData.CurrentPowers.Count}");
+            if (_localData.CurrentPowers.Count >= 2)
             {
                 lock (this)
                 {

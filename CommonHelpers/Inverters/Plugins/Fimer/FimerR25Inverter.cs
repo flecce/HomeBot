@@ -1,6 +1,7 @@
 ﻿using CommonHelpers.Inverters.Enums;
 using CommonHelpers.Inverters.Events;
 using CommonHelpers.Inverters.Interfaces;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -23,7 +24,12 @@ namespace CommonHelpers.Inverters.Plugins.Fimer
         private int _serialNumber = 0;
         private TcpClient _client;
         private NetworkStream _clientStream;
+        private ILogger<FimerR25Inverter> _logger;
 
+        public FimerR25Inverter(ILogger<FimerR25Inverter> logger)
+        {
+            _logger = logger;
+        }
         private TransmissionState ConnectTcpIndividual()
         {
             try
@@ -35,8 +41,9 @@ namespace CommonHelpers.Inverters.Plugins.Fimer
             {
                 return TransmissionState.Canceled;
             }
-            catch (SocketException)
+            catch (SocketException socketException)
             {
+                _logger.LogError($"Socket error:{socketException.Message}");
                 return TransmissionState.Error;
             }
 

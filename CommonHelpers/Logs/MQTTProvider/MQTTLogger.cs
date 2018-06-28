@@ -35,7 +35,7 @@ namespace CommonHelpers.Logs.MQTTProvider
             {
                 return;
             }
-            _mqttService.Publish("/home/logs", $"{logLevel}-{_name}-{formatter(state, exception)}");
+            _mqttService.Publish("/home/logs/"+_name, $"{logLevel}-{_name}-{formatter(state, exception)}");
         }
     }
 }

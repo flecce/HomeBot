@@ -3,7 +3,7 @@ Description=Home bot
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/dotnet /opt/homebot/TelegramBot.dll 5000
+ExecStart=/usr/bin/dotnet /opt/homebot/HomeBot.dll 5000
 Restart=on-failure
 
 [Install]
