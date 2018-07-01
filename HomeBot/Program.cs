@@ -9,6 +9,7 @@ using CommonHelpers.Powers;
 using CommonHelpers.Schedulers;
 using CommonHelpers.Schedulers.Tasks;
 using CommonHelpers.Times;
+using HomeBot.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
@@ -22,6 +23,8 @@ namespace Homebot
             ServiceCollection serviceCollection = new ServiceCollection();
             ServiceFactory.CurrentServiceProvider = _configureServices(serviceCollection);
 
+            _initLog();
+
             var botService = ServiceFactory.CurrentServiceProvider.GetService<IBotService>();
             var schedulerFactory = ServiceFactory.CurrentServiceProvider.GetService<ISchedulerFactory>();
             schedulerFactory.AddTask("", () => new InverterTask());
@@ -30,7 +33,7 @@ namespace Homebot
             botService.Start();
         }
 
-        private static ServiceProvider _configureServices(ServiceCollection serviceCollection)
+        private static IServiceProvider _configureServices(ServiceCollection serviceCollection)
         {
             serviceCollection.AddSingleton<ISchedulerFactory, CronSchedulerFactory>();
             serviceCollection.AddSingleton<ITimeService, RealTimeService>();
@@ -70,23 +73,28 @@ namespace Homebot
             });
 
             serviceCollection.AddSingleton<IPowerService, PowerService>(factory =>
-                       {
-                           return new PowerService(
-                              factory.GetService<IMQTTQueueService>(),
-                               factory.GetService<ILogger<PowerService>>());
-                       });
+            {
+                return new PowerService(
+                    factory.GetService<IMQTTQueueService>(),
+                    factory.GetService<ILogger<PowerService>>());
+            });
 
-            ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
+            return serviceCollection.UseAutofac((builder) =>
+            {
+                // Here autofac registration
+            });
+        }
 
-            serviceProvider.GetRequiredService<ILoggerFactory>()
-                            .AddConsole(LogLevel.Debug)
-                            .AddMQTTLogger(new MQTTLoggerConfiguration
-                            {
-                                BrokerServer = serviceProvider.GetService<IConfigurationService>().GetRequiredConfigValue("MQTT:Broker:Address"),
-                                LogLevel = LogLevel.Debug
-                            },
-                            serviceProvider.GetService<IMQTTQueueService>());
-            return serviceProvider;
+        private static void _initLog()
+        {
+            ServiceFactory.CurrentServiceProvider.GetRequiredService<ILoggerFactory>()
+                           .AddConsole(LogLevel.Debug)
+                           .AddMQTTLogger(new MQTTLoggerConfiguration
+                           {
+                               BrokerServer = ServiceFactory.CurrentServiceProvider.GetService<IConfigurationService>().GetRequiredConfigValue("MQTT:Broker:Address"),
+                               LogLevel = LogLevel.Debug
+                           },
+                           ServiceFactory.CurrentServiceProvider.GetService<IMQTTQueueService>());
         }
     }
 }
